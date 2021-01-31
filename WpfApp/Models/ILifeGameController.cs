@@ -9,5 +9,7 @@ namespace WpfApp.Models
         Task InitializeAsync(int columns, int rows);
 
         IObservable<IChangeSet<Cell>> Connect();
+
+        void Start(double generationInterval, params Cell[] initialAlives);
     }
 }

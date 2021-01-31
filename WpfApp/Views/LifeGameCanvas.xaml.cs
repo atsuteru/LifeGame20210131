@@ -34,8 +34,8 @@ namespace WpfApp.Views
                 for (int x = 0; x < Grid.ColumnDefinitions.Count; x++)
                 {
                     var cell = new CellPanel();
-                    cell.SetValue(Grid.RowProperty, y);
-                    cell.SetValue(Grid.ColumnProperty, x);
+                    cell.PositionX = x;
+                    cell.PositionY = y;
                     Grid.Children.Add(cell);
                 }
             }
