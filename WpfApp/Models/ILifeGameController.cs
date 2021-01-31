@@ -1,5 +1,4 @@
-﻿using DynamicData;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System;
 using System.Threading.Tasks;
 

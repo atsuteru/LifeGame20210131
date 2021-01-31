@@ -1,5 +1,4 @@
 ﻿using ReactiveUI;
-using ReactiveUI.Fody.Helpers;
 using System.Reactive.Disposables;
 
 namespace WpfApp.ViewModels

@@ -14,14 +14,14 @@ namespace WpfApp.Views
         {
             InitializeComponent();
 
-            for (int x = 0; x < 10; x++)
+            for (int x = 0; x < 40; x++)
             {
                 Grid.ColumnDefinitions.Add(new ColumnDefinition()
                 {
                     Width = new GridLength(10.0, GridUnitType.Pixel),
                 });
             }
-            for (int y = 0; y < 10; y++)
+            for (int y = 0; y < 40; y++)
             {
                 Grid.RowDefinitions.Add(new RowDefinition()
                 {

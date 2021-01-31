@@ -1,19 +1,9 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Reactive.Concurrency;
-using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 
 namespace WpfApp.Models
 {
@@ -51,21 +41,12 @@ namespace WpfApp.Models
 
                 foreach (var cell in cells.Values)
                 {
-                    if (cells.TryGetValue(Tuple.Create(cell.PositionX - 1, cell.PositionY), out var leftCell))
+                    foreach (var offset in new (int, int)[] { (-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1) })
                     {
-                        cell.SetLeft(leftCell);
-                    }
-                    if (cells.TryGetValue(Tuple.Create(cell.PositionX + 1, cell.PositionY), out var rightCell))
-                    {
-                        cell.SetRight(rightCell);
-                    }
-                    if (cells.TryGetValue(Tuple.Create(cell.PositionX, cell.PositionY - 1), out var upCell))
-                    {
-                        cell.SetUp(upCell);
-                    }
-                    if (cells.TryGetValue(Tuple.Create(cell.PositionX, cell.PositionY + 1), out var downCell))
-                    {
-                        cell.SetDown(downCell);
+                        if (cells.TryGetValue(Tuple.Create(cell.PositionX + offset.Item1, cell.PositionY + offset.Item2), out var ajacentCell))
+                        {
+                            cell.SetAjacent(ajacentCell);
+                        }
                     }
                 }
                 foreach (var cell in cells.Values)
@@ -87,8 +68,7 @@ namespace WpfApp.Models
             GenerationTimer.Elapsed += (s, e) =>
             {
                 Generations++;
-                Generation
-                    .OnNext(Generations);
+                Generation.OnNext(Generations);
             };
 
             foreach (var initialAlive in initialAlives)

@@ -1,46 +1,36 @@
-﻿using DynamicData;
-using DynamicData.Binding;
-using ReactiveUI;
+﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Text;
 
 namespace WpfApp.Models
 {
     public class Cell : ReactiveObject
     {
-        [Reactive]
-        public bool IsAlive { get; set; }
+        private struct AliveStatus
+        {
+            public int Generation { get; set; }
+
+            public bool IsAlive { get; set; }
+        }
 
         public int PositionX { get; }
 
         public int PositionY { get; }
 
-        protected SourceList<Cell> AdjacentList { get; }
+        public int CurrentGeneration { get; private set; }
 
-        private readonly ReadOnlyObservableCollection<Cell> _ajacents;
-        public ReadOnlyObservableCollection<Cell> Ajacents => _ajacents;
+        [Reactive]
+        public bool IsAlive { get; set; }
 
-        public int AdjacentAlives { get; protected set; }
+        private ConcurrentDictionary<Tuple<int,int>, AliveStatus> Ajacents { get; }
 
         public Cell()
         {
-            AdjacentList = new SourceList<Cell>();
-
-            AdjacentList
-                .Connect()
-                .Bind(out _ajacents)
-                .Subscribe();
-
-            Ajacents
-                .ToObservableChangeSet()
-                .ToCollection()
-                .Subscribe(ajacents =>
-                {
-                    AdjacentAlives = ajacents.Count(x => x.IsAlive);
-                });
+            Ajacents = new ConcurrentDictionary<Tuple<int, int>, AliveStatus>();
+            CurrentGeneration = 0;
         }
 
         public Cell(int positionX, int positionY) : this()
@@ -51,38 +41,59 @@ namespace WpfApp.Models
 
         public Cell(int positionX, int positionY, IObservable<int> generation) : this(positionX, positionY)
         {
-            generation.Subscribe(x =>
+            generation.Subscribe(generationNumber =>
             {
-                if (AdjacentAlives >= 3)
+                CurrentGeneration = generationNumber;
+
+                var adjacentAlives = Ajacents.Values.Count(alives => 
+                        (alives.Generation < generationNumber && alives.IsAlive == true) ||
+                        (alives.Generation == generationNumber && alives.IsAlive == false));
+                if (adjacentAlives == 3) // 誕生
                 {
                     IsAlive = true;
                 }
-                else if (AdjacentAlives < 2)
+                else if (adjacentAlives < 2) // 過疎
                 {
                     IsAlive = false;
                 }
-                Debug.WriteLine($"[{DateTime.Now: HH:mm:ss}]Cell_Subscribe1[{x},({PositionX},{PositionY}),{IsAlive}]");
+                else if (adjacentAlives > 3) // 過密
+                {
+                    IsAlive = false;
+                }
             });
         }
 
-        public void SetLeft(Cell leftCell)
+        public void SetAjacent(Cell ajacentCell)
         {
-            AdjacentList.Add(leftCell);
+            AddOrUpdateAjacents(ajacentCell);
+            ajacentCell.Changed.Subscribe(e =>
+            {
+                AddOrUpdateAjacents(e.Sender as Cell);
+            });
         }
 
-        public void SetRight(Cell rightCell)
+        private void AddOrUpdateAjacents(Cell cell)
         {
-            AdjacentList.Add(rightCell);
+            Ajacents.AddOrUpdate(
+                Tuple.Create(cell.PositionX, cell.PositionY),
+                new AliveStatus() { Generation = 0, IsAlive = cell.IsAlive },
+                (k, v) =>
+                {
+                    v.Generation = cell.CurrentGeneration;
+                    v.IsAlive = cell.IsAlive;
+                    return v;
+                });
         }
 
-        public void SetUp(Cell upCell)
+        public override string ToString()
         {
-            AdjacentList.Add(upCell);
+            var builder = new StringBuilder(base.ToString());
+            builder.Append($",{nameof(PositionX)}:{PositionX}");
+            builder.Append($",{nameof(PositionY)}:{PositionY}");
+            builder.Append($",{nameof(CurrentGeneration)}:{CurrentGeneration}");
+            builder.Append($",{nameof(IsAlive)}:{IsAlive}");
+            return builder.ToString();
         }
 
-        public void SetDown(Cell downCell)
-        {
-            AdjacentList.Add(downCell);
-        }
     }
 }

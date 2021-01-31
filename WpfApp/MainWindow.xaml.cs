@@ -1,5 +1,6 @@
 ﻿using Splat;
 using System;
+using System.Collections.Generic;
 using System.Windows;
 using WpfApp.Models;
 
@@ -19,19 +20,18 @@ namespace WpfApp
         {
             base.OnSourceInitialized(e);
 
-            await Locator.Current.GetService<ILifeGameController>().InitializeAsync(columns: 10, rows: 10);
+            await Locator.Current.GetService<ILifeGameController>().InitializeAsync(columns: 40, rows: 40);
+
+            var aliveCells = new List<Cell>();
+            var random = new Random();
+            for (int i = 0; i < 300; i++)
+            {
+                aliveCells.Add(new Cell(random.Next(1, 40), random.Next(1, 40)));
+            }
 
             Locator.Current.GetService<ILifeGameController>().Start(
-                1000.0,
-                new Cell(0, 0),
-                new Cell(0, 1),
-                new Cell(0, 2),
-                new Cell(1, 0),
-                new Cell(1, 1),
-                new Cell(1, 2),
-                new Cell(2, 0),
-                new Cell(2, 1),
-                new Cell(2, 2)
+                100.0,
+                aliveCells.ToArray()
                 );
         }
     }
