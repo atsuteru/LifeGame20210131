@@ -1,13 +1,15 @@
 ﻿using DynamicData;
 using DynamicData.Binding;
+using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 
 namespace WpfApp.Models
 {
-    public class Cell
+    public class Cell : ReactiveObject
     {
         [Reactive]
         public bool IsAlive { get; set; }
@@ -55,10 +57,11 @@ namespace WpfApp.Models
                 {
                     IsAlive = true;
                 }
-                else if(AdjacentAlives < 2)
+                else if (AdjacentAlives < 2)
                 {
                     IsAlive = false;
                 }
+                Debug.WriteLine($"[{DateTime.Now: HH:mm:ss}]Cell_Subscribe1[{x},({PositionX},{PositionY}),{IsAlive}]");
             });
         }
 

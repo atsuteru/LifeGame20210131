@@ -33,9 +33,13 @@ namespace WpfApp.Views
             {
                 for (int x = 0; x < Grid.ColumnDefinitions.Count; x++)
                 {
+                    var cellVM = new CellPanelViewModel()
+                    {
+                        PositionX = x,
+                        PositionY = y,
+                    };
                     var cell = new CellPanel();
-                    cell.PositionX = x;
-                    cell.PositionY = y;
+                    cell.DataContext = cellVM;
                     Grid.Children.Add(cell);
                 }
             }

@@ -6,10 +6,12 @@ namespace WpfApp.ViewModels
 {
     public class LifeGameCanvasViewModel : IActivatableViewModel
     {
-        ViewModelActivator IActivatableViewModel.Activator => new ViewModelActivator();
+        public ViewModelActivator Activator { get; }
 
         public LifeGameCanvasViewModel()
         {
+            Activator = new ViewModelActivator();
+
             this.WhenActivated(d =>
             {
                 HandleActivation(d);

@@ -1,9 +1,17 @@
 ﻿using DynamicData;
+using DynamicData.Binding;
+using ReactiveUI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 
@@ -11,32 +19,21 @@ namespace WpfApp.Models
 {
     public class LifeGameController : ILifeGameController
     {
-        protected SourceList<Cell> Cells { get; }
+        protected ConcurrentDictionary<Tuple<int, int>, Cell> Cells { get; }
 
-        public IObservable<int> Generation { get; }
+        protected Subject<int> Generation { get; }
 
-        protected IObserver<int> GenerationObserver { get; set; }
-
-        public Timer GenerationTimer { get; }
+        public System.Timers.Timer GenerationTimer { get; }
 
         public int Generations { get; protected set; }
 
         public LifeGameController()
         {
-            Cells = new SourceList<Cell>();
+            Cells = new ConcurrentDictionary<Tuple<int, int>, Cell>();
 
-            Generation = Observable.Create<int>(observer =>
-            {
-                GenerationObserver = observer;
-                return Task.CompletedTask;
-            });
+            Generation = new Subject<int>();
 
-            GenerationTimer = new Timer();
-        }
-
-        IObservable<IChangeSet<Cell>> ILifeGameController.Connect()
-        {
-            return Cells.Connect();
+            GenerationTimer = new System.Timers.Timer();
         }
 
         Task ILifeGameController.InitializeAsync(int columns, int rows)
@@ -71,7 +68,16 @@ namespace WpfApp.Models
                         cell.SetDown(downCell);
                     }
                 }
-           });
+                foreach (var cell in cells.Values)
+                {
+                    Cells.AddOrUpdate(Tuple.Create(cell.PositionX, cell.PositionY), cell, (k,v) => cell);
+                }
+            });
+        }
+
+        IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>> ILifeGameController.CellListener(int positionX, int positionY)
+        {
+            return Cells[Tuple.Create(positionX,positionY)].Changed;
         }
 
         void ILifeGameController.Start(double generationInterval, params Cell[] initialAlives)
@@ -81,8 +87,17 @@ namespace WpfApp.Models
             GenerationTimer.Elapsed += (s, e) =>
             {
                 Generations++;
-                GenerationObserver.OnNext(Generations);
+                Generation
+                    .OnNext(Generations);
             };
+
+            foreach (var initialAlive in initialAlives)
+            {
+                if (Cells.TryGetValue(Tuple.Create(initialAlive.PositionX, initialAlive.PositionY), out var cell))
+                {
+                    cell.IsAlive = true;
+                }
+            }
 
             Generations = 0;
             GenerationTimer.Start();

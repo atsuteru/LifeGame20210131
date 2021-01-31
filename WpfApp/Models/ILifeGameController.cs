@@ -1,4 +1,5 @@
 ﻿using DynamicData;
+using ReactiveUI;
 using System;
 using System.Threading.Tasks;
 
@@ -8,7 +9,7 @@ namespace WpfApp.Models
     {
         Task InitializeAsync(int columns, int rows);
 
-        IObservable<IChangeSet<Cell>> Connect();
+        IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>> CellListener(int positionX, int positionY);
 
         void Start(double generationInterval, params Cell[] initialAlives);
     }

@@ -46,9 +46,6 @@ namespace WpfApp.Views
         {
             InitializeComponent();
 
-            ViewModel = new CellPanelViewModel();
-            DataContext = ViewModel;
-
             this.WhenActivated(d =>
             {
                 HandleActivation(d);
@@ -60,10 +57,10 @@ namespace WpfApp.Views
 
         private void HandleActivation(CompositeDisposable d)
         {
-            ViewModel.PositionX = PositionX;
-            ViewModel.PositionY = PositionY;
+            ViewModel = DataContext as CellPanelViewModel;
 
-            this.Bind(ViewModel, vm => vm.IsAlive, v => v.IsAlive).DisposeWith(d);
+            this.OneWayBind(ViewModel, vm => vm.PositionX, v => v.PositionX).DisposeWith(d);
+            this.OneWayBind(ViewModel, vm => vm.PositionY, v => v.PositionY).DisposeWith(d);
         }
 
         private void HandleDeactivation()

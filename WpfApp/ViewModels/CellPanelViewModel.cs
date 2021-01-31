@@ -12,9 +12,9 @@ using WpfApp.Models;
 
 namespace WpfApp.ViewModels
 {
-    public class CellPanelViewModel : IActivatableViewModel
+    public class CellPanelViewModel : ReactiveObject, IActivatableViewModel
     {
-        ViewModelActivator IActivatableViewModel.Activator => new ViewModelActivator();
+        public ViewModelActivator Activator { get; }
 
         private ReadOnlyObservableCollection<Cell> _cells;
         public ReadOnlyObservableCollection<Cell> Cells => _cells;
@@ -22,14 +22,14 @@ namespace WpfApp.ViewModels
         [Reactive]
         public bool IsAlive { get; set; }
 
-        [Reactive]
         public int PositionY { get; set; }
 
-        [Reactive]
         public int PositionX { get; set; }
 
         public CellPanelViewModel()
         {
+            Activator = new ViewModelActivator();
+
             this.WhenActivated(d =>
             {
                 HandleActivation(d);
@@ -42,20 +42,10 @@ namespace WpfApp.ViewModels
         private void HandleActivation(CompositeDisposable d)
         {
             Locator.Current.GetService<ILifeGameController>()
-                .Connect()
-                .Filter(x => x.PositionX == PositionX && x.PositionY == PositionY)
-                .ObserveOn(RxApp.MainThreadScheduler)
-                .Bind(out _cells)
-                .Subscribe()
-                .DisposeWith(d)
-                ;
-
-            Cells
-                .ToObservableChangeSet()
-                .ToCollection()
-                .Subscribe(cells =>
+                .CellListener(PositionX, PositionY)
+                .Subscribe(e =>
                 {
-                    var cell = cells.First();
+                    var cell = e.Sender as Cell;
                     IsAlive = cell.IsAlive;
                 })
                 .DisposeWith(d);
