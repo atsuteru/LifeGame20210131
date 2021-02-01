@@ -1,0 +1,31 @@
+﻿<rx:ReactiveWindow 
+    x:Class="WpfApp.Views.MainWindow"
+    x:TypeArguments="vm:MainViewModel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:rx="http://reactiveui.net"
+    xmlns:vm="clr-namespace:WpfApp.ViewModels"
+    xmlns:local="clr-namespace:WpfApp.Views"
+    mc:Ignorable="d"
+    Title="LifeGame" Height="524" Width="460" Top="0" Left="0">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Grid.Column="1" Grid.Row="0">
+            <Label Content="How to Play"/>
+            <TextBlock Margin="12,0,0,2" Text="・Controlキーを押しながらなぞった箇所に、生命が誕生します。"/>
+            <TextBlock Margin="12,0,0,8" Text="・ControlキーとShiftキーを押しながらなぞった箇所の生命は死滅します。"/>
+        </StackPanel>
+        <local:LifeGameCanvas Grid.Column="1" Grid.Row="1" Width="400" Height="400"/>
+    </Grid>
+</rx:ReactiveWindow>

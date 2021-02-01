@@ -1,7 +1,9 @@
 ﻿using ReactiveUI;
 using ReactiveUI.Fody.Helpers;
+using System;
 using System.Reactive.Disposables;
 using System.Windows.Controls;
+using System.Windows.Input;
 using WpfApp.ViewModels;
 
 namespace WpfApp.Views
@@ -11,9 +13,6 @@ namespace WpfApp.Views
     /// </summary>
     public partial class CellPanel : ReactiveUserControl<CellPanelViewModel>
     {
-        [Reactive]
-        public bool IsAlive { get; set; }
-
         public int PositionX
         {
             get
@@ -58,6 +57,10 @@ namespace WpfApp.Views
         private void HandleActivation(CompositeDisposable d)
         {
             ViewModel = DataContext as CellPanelViewModel;
+            if (ViewModel == null) // For designer
+            {
+                return;
+            }
 
             this.OneWayBind(ViewModel, vm => vm.PositionX, v => v.PositionX).DisposeWith(d);
             this.OneWayBind(ViewModel, vm => vm.PositionY, v => v.PositionY).DisposeWith(d);
@@ -65,6 +68,28 @@ namespace WpfApp.Views
 
         private void HandleDeactivation()
         {
+        }
+
+        protected override void OnMouseEnter(MouseEventArgs e)
+        {
+            var isCtrlDown = Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl);
+            if (!isCtrlDown)
+            {
+                return;
+            }
+            var isShiftDown = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+            if (ViewModel.IsAlive && isShiftDown)
+            {
+                ViewModel.ChangeAliveCommand.Execute(false).Subscribe();
+                return;
+            }
+
+            if (!ViewModel.IsAlive && !isShiftDown)
+            {
+                ViewModel.ChangeAliveCommand.Execute(true).Subscribe();
+                return;
+            }
         }
     }
 }

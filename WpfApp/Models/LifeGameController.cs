@@ -82,5 +82,18 @@ namespace WpfApp.Models
             Generations = 0;
             GenerationTimer.Start();
         }
+
+        Task ILifeGameController.SetCellAlive(int positionX, int positionY, bool isAlive)
+        {
+            return Task.Run(() =>
+            {
+                if (!Cells.TryGetValue(Tuple.Create(positionX, positionY), out var cell))
+                {
+                    return Task.CompletedTask;
+                }
+                cell.IsAlive = isAlive;
+                return Task.CompletedTask;
+            }); 
+        }
     }
 }

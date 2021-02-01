@@ -3,6 +3,7 @@ using ReactiveUI.Fody.Helpers;
 using Splat;
 using System;
 using System.Collections.ObjectModel;
+using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using WpfApp.Models;
@@ -16,6 +17,8 @@ namespace WpfApp.ViewModels
         private ReadOnlyObservableCollection<Cell> _cells;
         public ReadOnlyObservableCollection<Cell> Cells => _cells;
 
+        public ReactiveCommand<bool, Unit> ChangeAliveCommand { get; }
+
         [Reactive]
         public bool IsAlive { get; set; }
 
@@ -26,6 +29,12 @@ namespace WpfApp.ViewModels
         public CellPanelViewModel()
         {
             Activator = new ViewModelActivator();
+
+            ChangeAliveCommand = ReactiveCommand.CreateFromTask<bool>(isAlive =>
+            {
+                return Locator.Current.GetService<ILifeGameController>()?
+                    .SetCellAlive(PositionX, PositionY, isAlive);
+            });
 
             this.WhenActivated(d =>
             {
@@ -38,7 +47,7 @@ namespace WpfApp.ViewModels
 
         private void HandleActivation(CompositeDisposable d)
         {
-            Locator.Current.GetService<ILifeGameController>()
+            Locator.Current.GetService<ILifeGameController>()?
                 .CellListener(PositionX, PositionY)
                 .Subscribe(e =>
                 {

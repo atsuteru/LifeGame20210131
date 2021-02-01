@@ -11,5 +11,7 @@ namespace WpfApp.Models
         IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>> CellListener(int positionX, int positionY);
 
         void Start(double generationInterval, params Cell[] initialAlives);
+
+        Task SetCellAlive(int positionX, int positionY, bool isAlive);
     }
 }
