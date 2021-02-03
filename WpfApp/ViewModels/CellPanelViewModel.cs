@@ -48,11 +48,10 @@ namespace WpfApp.ViewModels
         private void HandleActivation(CompositeDisposable d)
         {
             Locator.Current.GetService<ILifeGameController>()?
-                .CellListener(PositionX, PositionY)
+                .CellWatcher(PositionX, PositionY)
                 .Subscribe(e =>
                 {
-                    var cell = e.Sender as Cell;
-                    IsAlive = cell.IsAlive;
+                    IsAlive = ((Cell)e.Sender).IsAlive;
                 })
                 .DisposeWith(d);
         }

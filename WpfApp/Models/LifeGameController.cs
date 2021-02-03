@@ -1,6 +1,6 @@
-﻿using ReactiveUI;
+﻿using DynamicData;
+using ReactiveUI;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace WpfApp.Models
 {
     public class LifeGameController : ILifeGameController
     {
-        protected ConcurrentDictionary<Tuple<int, int>, Cell> Cells { get; }
+        protected SourceCache<Cell, Tuple<int, int>> Cells { get; }
 
         protected Subject<int> Generation { get; }
 
@@ -19,11 +19,16 @@ namespace WpfApp.Models
 
         public LifeGameController()
         {
-            Cells = new ConcurrentDictionary<Tuple<int, int>, Cell>();
+            Cells = new SourceCache<Cell, Tuple<int, int>>(cell => Tuple.Create(cell.PositionX, cell.PositionY));
 
             Generation = new Subject<int>();
 
             GenerationTimer = new System.Timers.Timer();
+        }
+
+        IObservable<IChangeSet<Cell, Tuple<int, int>>> ILifeGameController.CellsWatcher()
+        {
+            return Cells.Connect();
         }
 
         Task ILifeGameController.InitializeAsync(int columns, int rows)
@@ -51,14 +56,14 @@ namespace WpfApp.Models
                 }
                 foreach (var cell in cells.Values)
                 {
-                    Cells.AddOrUpdate(Tuple.Create(cell.PositionX, cell.PositionY), cell, (k,v) => cell);
+                    Cells.AddOrUpdate(cell);
                 }
             });
         }
 
-        IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>> ILifeGameController.CellListener(int positionX, int positionY)
+        IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>> ILifeGameController.CellWatcher(int positionX, int positionY)
         {
-            return Cells[Tuple.Create(positionX,positionY)].Changed;
+            return Cells.Lookup(Tuple.Create(positionX, positionY)).Value.Changed;
         }
 
         void ILifeGameController.Start(double generationInterval, params Cell[] initialAlives)
@@ -73,10 +78,12 @@ namespace WpfApp.Models
 
             foreach (var initialAlive in initialAlives)
             {
-                if (Cells.TryGetValue(Tuple.Create(initialAlive.PositionX, initialAlive.PositionY), out var cell))
+                var cellRef = Cells.Lookup(Tuple.Create(initialAlive.PositionX,initialAlive.PositionY));
+                if (!cellRef.HasValue)
                 {
-                    cell.IsAlive = true;
+                    continue;
                 }
+                cellRef.Value.IsAlive = true;
             }
 
             Generations = 0;
@@ -87,11 +94,12 @@ namespace WpfApp.Models
         {
             return Task.Run(() =>
             {
-                if (!Cells.TryGetValue(Tuple.Create(positionX, positionY), out var cell))
+                var cellRef = Cells.Lookup(Tuple.Create(positionX, positionY));
+                if (!cellRef.HasValue)
                 {
                     return Task.CompletedTask;
                 }
-                cell.IsAlive = isAlive;
+                cellRef.Value.IsAlive = isAlive;
                 return Task.CompletedTask;
             }); 
         }
