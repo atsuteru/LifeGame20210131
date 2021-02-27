@@ -24,7 +24,7 @@ namespace WpfApp.Views
             {
                 ViewModel = DataContext as LifeGameCanvasViewModel;
 
-                ViewModel.Cells
+                ViewModel.Cells?
                     .ToObservableChangeSet()
                     .ToCollection()
                     .Subscribe(cells =>
